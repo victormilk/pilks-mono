@@ -1,6 +1,6 @@
 # pilks-mono
 
-Monorepo for Pi Coding Agent (`@mariozechner/pi-coding-agent`) extensions.
+Monorepo for Pi Coding Agent (`@earendil-works/pi-coding-agent`) extensions.
 
 ## Packages
 
@@ -21,13 +21,19 @@ Pi loads extensions as `.ts` directly via jiti — there is no build step.
 
 ## Installing an extension into Pi
 
-From the workspace root:
+From npm (once published):
+
+```bash
+pi install npm:@victormilk/pi-vibeproxy
+```
+
+From this monorepo (local checkout):
 
 ```bash
 pi install ./packages/pi-vibeproxy
 ```
 
-Or for one-off testing:
+Or for one-off testing without installing:
 
 ```bash
 pi -e ./packages/pi-vibeproxy/src/index.ts

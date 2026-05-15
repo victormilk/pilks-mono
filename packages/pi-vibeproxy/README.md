@@ -11,16 +11,16 @@ Streaming and tool/function calling are forwarded by `@mariozechner/pi-ai`'s bui
 
 ## Install
 
-From inside this monorepo:
-
-```bash
-pi install ./packages/pi-vibeproxy
-```
-
-Once published:
+From npm:
 
 ```bash
 pi install npm:@victormilk/pi-vibeproxy
+```
+
+From a local checkout of this monorepo:
+
+```bash
+pi install ./packages/pi-vibeproxy
 ```
 
 For one-off testing without installing:
