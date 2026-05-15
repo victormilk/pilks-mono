@@ -1,0 +1,68 @@
+{
+  "name": "@victormilk/pi-vibeproxy",
+  "version": "0.1.0",
+  "description": "Pi Coding Agent extension that exposes a CLIProxyAPIPlus (VibeProxy) instance as Anthropic and OpenAI model providers.",
+  "license": "MIT",
+  "author": "Victor Leite Costa",
+  "homepage": "https://github.com/victormilk/pilks-mono/tree/main/packages/pi-vibeproxy#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/victormilk/pilks-mono.git",
+    "directory": "packages/pi-vibeproxy"
+  },
+  "type": "module",
+  "keywords": [
+    "pi-package",
+    "pi",
+    "pi-coding-agent",
+    "pi-extension",
+    "pi-provider",
+    "pi-model-provider",
+    "pi-custom-provider",
+    "vibeproxy",
+    "cliproxyapiplus",
+    "cliproxy",
+    "cliproxyapi",
+    "llm-proxy",
+    "llm-gateway",
+    "openai",
+    "openai-compatible",
+    "openai-completions",
+    "anthropic",
+    "anthropic-messages",
+    "claude",
+    "gpt",
+    "model-router",
+    "proxy",
+    "local-llm",
+    "self-hosted",
+    "streaming",
+    "tool-calling",
+    "function-calling"
+  ],
+  "pi": {
+    "extensions": [
+      "./src/index.ts"
+    ]
+  },
+  "files": [
+    "src/",
+    "README.md",
+    "LICENSE",
+    "package.json",
+    "tsconfig.json"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-ai": "*",
+    "@earendil-works/pi-coding-agent": "*"
+  },
+  "devDependencies": {
+    "@earendil-works/pi-ai": "^0.74.0",
+    "@earendil-works/pi-coding-agent": "^0.74.0",
+    "@types/node": "^24.3.0",
+    "typescript": "^5.7.3"
+  }
+}
