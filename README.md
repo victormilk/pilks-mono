@@ -7,6 +7,7 @@ Monorepo for Pi Coding Agent (`@earendil-works/pi-coding-agent`) extensions.
 | Package | Description |
 |---------|-------------|
 | [`@victormilk/pi-vibeproxy`](./packages/pi-vibeproxy) | Pi extension that registers a CLIProxyAPIPlus instance as two model providers (Anthropic + OpenAI surfaces). |
+| [`@victormilk/pi-droid`](./packages/pi-droid) | Pi extension that registers Factory.AI Droid models, backed by a long-lived `droid exec` subprocess via `@factory/droid-sdk`. |
 
 ## Development
 

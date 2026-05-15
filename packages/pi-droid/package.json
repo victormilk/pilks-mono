@@ -1,0 +1,66 @@
+{
+  "name": "@victormilk/pi-droid",
+  "version": "0.1.0",
+  "description": "Pi Coding Agent extension that registers Factory.AI Droid models as a custom-streamSimple provider backed by a long-lived `droid exec` subprocess.",
+  "license": "MIT",
+  "author": "Victor Leite Costa",
+  "homepage": "https://github.com/victormilk/pilks-mono/tree/main/packages/pi-droid#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/victormilk/pilks-mono.git",
+    "directory": "packages/pi-droid"
+  },
+  "type": "module",
+  "keywords": [
+    "pi-package",
+    "pi",
+    "pi-coding-agent",
+    "pi-extension",
+    "pi-provider",
+    "pi-model-provider",
+    "pi-custom-provider",
+    "factory",
+    "factory-ai",
+    "droid",
+    "droid-cli",
+    "droid-exec",
+    "claude",
+    "gpt",
+    "gemini",
+    "streaming",
+    "tool-calling",
+    "function-calling",
+    "jsonrpc"
+  ],
+  "pi": {
+    "extensions": [
+      "./src/index.ts"
+    ]
+  },
+  "files": [
+    "src/",
+    "README.md",
+    "LICENSE",
+    "package.json",
+    "tsconfig.json"
+  ],
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@factory/droid-sdk": "^0.2.0"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-ai": "*",
+    "@earendil-works/pi-coding-agent": "*"
+  },
+  "devDependencies": {
+    "@earendil-works/pi-ai": "^0.74.0",
+    "@earendil-works/pi-coding-agent": "^0.74.0",
+    "@types/node": "^24.3.0",
+    "typescript": "^5.7.3"
+  }
+}
