@@ -1,7 +1,7 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { CONFIG_PATH_FOR_DIAGNOSTICS, loadConfig } from "./config.ts";
 import { resolveAll } from "./discovery.ts";
-import { registerProvider, wireSessionShutdown } from "./providers.ts";
+import { registerProvider, setUI, wireSessionShutdown } from "./providers.ts";
 import { registerCommands, type RuntimeState } from "./commands.ts";
 
 /**
@@ -37,11 +37,21 @@ export default async function piDroid(pi: ExtensionAPI): Promise<void> {
 	registerCommands(pi, state);
 
 	pi.on("session_start", async (_event, ctx) => {
-		if (!ctx.hasUI) return;
+		if (!ctx.hasUI) {
+			setUI(null);
+			return;
+		}
+		// Hand the UI to providers.ts so the SDK's askUserHandler can surface
+		// Droid questionnaires through Pi's selectors.
+		setUI(ctx.ui);
 		const configHint = cfg.loadedFrom ? "" : ` (no config file at ${CONFIG_PATH_FOR_DIAGNOSTICS})`;
 		ctx.ui.notify(
 			`pi-droid: ${stats.totalModels} models available, autonomy=${cfg.autoLevel}${configHint}.`,
 			"info",
 		);
+	});
+
+	pi.on("session_shutdown", async () => {
+		setUI(null);
 	});
 }

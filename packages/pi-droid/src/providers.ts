@@ -1,4 +1,4 @@
-import type { ExtensionAPI, ProviderConfig } from "@earendil-works/pi-coding-agent";
+import type { ExtensionAPI, ExtensionUIContext, ProviderConfig } from "@earendil-works/pi-coding-agent";
 import {
 	calculateCost,
 	createAssistantMessageEventStream,
@@ -8,17 +8,28 @@ import {
 	type Context,
 	type Model,
 	type SimpleStreamOptions,
-	type ToolCall,
 } from "@earendil-works/pi-ai";
 import {
 	AutonomyLevel,
 	createSession,
 	DroidMessageType,
 	ToolConfirmationOutcome,
+	type AskUserRequestParams,
+	type AskUserResult,
 	type DroidMessage,
 	type DroidSession,
 } from "@factory/droid-sdk";
 import type { ResolvedConfig, ResolvedModel } from "./types.ts";
+
+// Note: pi-droid does NOT forward Droid `tool_use` events to Pi. The droid
+// subprocess owns the entire tool loop — it executes built-ins (Read/Write/Edit/
+// Execute/TodoWrite/…), MCP tools, and orchestration tools (AskUser/ExitSpecMode/
+// ProposeMission/StartMissionRun) inside its own process and continues streaming
+// assistant text afterward. Pi has no matching tool definitions, so any
+// forwarded tool call would trigger `Tool <Name> not found` (see
+// `@earendil-works/pi-agent-core/dist/agent-loop.js:335`) and stall the turn.
+// What Pi sees is the final assistant text/thinking only — a single turn from
+// Pi's perspective regardless of how many internal tool round-trips Droid did.
 
 const PROVIDER_NAME = "droid";
 const PROVIDER_DISPLAY_NAME = "Factory Droid";
@@ -41,6 +52,18 @@ const PROVIDER_API_KEY_ENV = "FACTORY_API_KEY";
 let session: DroidSession | null = null;
 let lastSpawnAt: number | undefined;
 let lastError: string | undefined;
+
+/**
+ * Latest `ExtensionUIContext`, captured from `session_start`. Used by the
+ * `askUserHandler` to surface Droid's questionnaire through Pi's selectors
+ * instead of letting the SDK auto-cancel.
+ */
+let uiRef: ExtensionUIContext | null = null;
+
+/** Called from `session_start` so the askUserHandler has a UI to drive. */
+export function setUI(ui: ExtensionUIContext | null): void {
+	uiRef = ui;
+}
 
 /** Exposed for `commands.ts` (`/droid-status`, `/droid-restart`). */
 export function getSessionSnapshot(): {
@@ -300,27 +323,10 @@ function translate(
 		}
 
 		case DroidMessageType.ToolUse: {
-			// Droid yields one `tool_use` event per tool call carrying the final input. Pi's
-			// consumer expects start + delta + end, so emit all three in sequence with the
-			// snapshot as the delta payload.
-			const args = (event.toolInput ?? {}) as Record<string, unknown>;
-			const idx = output.content.length;
-			const call: ToolCall = {
-				type: "toolCall",
-				id: event.toolUseId,
-				name: event.toolName,
-				arguments: args,
-			};
-			output.content.push(call);
-			stream.push({ type: "toolcall_start", contentIndex: idx, partial: output });
-			stream.push({
-				type: "toolcall_delta",
-				contentIndex: idx,
-				delta: safeStringify(args),
-				partial: output,
-			});
-			stream.push({ type: "toolcall_end", contentIndex: idx, toolCall: call, partial: output });
-			output.stopReason = "toolUse";
+			// Drop — Droid runs every tool inside its own subprocess. See module-level
+			// note above. We intentionally do NOT push a `toolCall` content block and
+			// do NOT set `stopReason = "toolUse"` (which would make Pi enter its tool
+			// dispatch phase against an empty tool registry).
 			return;
 		}
 
@@ -371,14 +377,6 @@ function translate(
 	}
 }
 
-function safeStringify(value: unknown): string {
-	try {
-		return JSON.stringify(value);
-	} catch {
-		return "";
-	}
-}
-
 // ---------------------------------------------------------------------------
 // Lazy session lifecycle
 // ---------------------------------------------------------------------------
@@ -403,12 +401,38 @@ async function getOrCreateSession(cfg: ResolvedConfig, apiKey: string | undefine
 		// via `execArgs` to avoid double-wiring.
 		autonomyLevel: autonomyFromAutoLevel(cfg.autoLevel),
 		permissionHandler: () => ToolConfirmationOutcome.ProceedOnce,
+		askUserHandler: handleAskUser,
 		env,
 	});
 	session = created;
 	lastSpawnAt = Date.now();
 	lastError = undefined;
 	return created;
+}
+
+/**
+ * Surface Droid's `droid.ask_user` request through Pi's UI. Each question becomes
+ * a `ui.select` (or `ui.input` for free-form questions). Returns `{ cancelled }`
+ * when no UI is available or the user dismisses a prompt — that's how Droid
+ * decides to stop waiting and continue.
+ */
+async function handleAskUser(params: AskUserRequestParams): Promise<AskUserResult> {
+	const ui = uiRef;
+	if (!ui) return { cancelled: true, answers: [] };
+
+	const answers: AskUserResult["answers"] = [];
+	for (const q of params.questions) {
+		const title = q.topic ? `${q.topic}: ${q.question}` : q.question;
+		let answer: string | undefined;
+		if (q.options && q.options.length > 0) {
+			answer = await ui.select(title, [...q.options]);
+		} else {
+			answer = await ui.input(title);
+		}
+		if (answer === undefined) return { cancelled: true, answers: [] };
+		answers.push({ index: q.index, question: q.question, answer });
+	}
+	return { answers };
 }
 
 function autonomyFromAutoLevel(level: ResolvedConfig["autoLevel"]): AutonomyLevel {

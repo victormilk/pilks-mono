@@ -1,6 +1,6 @@
 {
   "name": "@victormilk/pi-droid",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Pi Coding Agent extension that registers Factory.AI Droid models as a custom-streamSimple provider backed by a long-lived `droid exec` subprocess.",
   "license": "MIT",
   "author": "Victor Leite Costa",
